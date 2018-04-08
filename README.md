@@ -8,11 +8,11 @@ GTA5 mod that extracts computer vision data (pedestrian & vehicle bounding boxes
 - Save pedestrians and vehicles detection images during game playing.
 - Output samples:
   - sample1
-    - input: <img src="sample_output/original1.jpg" width="500px" />
-    - output: <img src="sample_output/sample1.jpg" width="500px" />
+    - input: <br /><img src="sample_output/original1.jpg" width="90%" />
+    - output: <br /><img src="sample_output/sample1.jpg" width="90%" />
   - sample2
-    - input: <img src="sample_output/original2.jpg" width="500px" />
-    - output: <img src="sample_output/sample2.jpg" width="500px" />
+    - input: <br /><img src="sample_output/original2.jpg" width="90%" />
+    - output: <br /><img src="sample_output/sample2.jpg" width="90%" />
 
 ## Requirements
 
