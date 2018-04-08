@@ -51,8 +51,17 @@ namespace gta5_vision_data_extractor
             _frame_count++;
 
             // check if this frame is target frame
-            if (_frame_count % _save_settings.SaveFrameSpan != 0) return;
+            if (_frame_count % _save_settings.SaveFrameSpan == 0)
+            {
+                doDetectionExport();
+            }
+        }
 
+        /// <summary>
+        /// Perform detection data export
+        /// </summary>
+        private void doDetectionExport()
+        {
             // find target objects around camera
             var camera_position = GameplayCamera.Position;
 
@@ -78,5 +87,12 @@ namespace gta5_vision_data_extractor
 
             // save image
         }
+
+
+        //--------------------- temporaliry util code ------
+        
+
+
+        
     }
 }
