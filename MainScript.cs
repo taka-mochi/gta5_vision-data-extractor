@@ -118,8 +118,9 @@ namespace gta5_vision_data_extractor
                 if (entity.IsOccluded) continue;
 
                 // check occlusion by ray-casting
-                // ...
+                if (!GTAUtils.CheckOcculusionVisibility(entity, camera_position)) continue;
 
+                // compute a bounding box
                 var bb = GTAUtils.ComputeBoundingBox(entity, entity.Model.IsPed);
 
                 // cannot get bounding box

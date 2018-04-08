@@ -405,6 +405,56 @@ namespace gta5_vision_data_extractor
         }
 
         /// <summary>
+        /// Get entity's general 3D bounding box (tends to be larger than real appearance)
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        private static Vector3[] Get3DBoundingBoxCornersInWorldCoordinate(Entity entity)
+        {
+            Vector3 bmin, bmax;
+            entity.Model.GetDimensions(out bmin, out bmax);
+
+            // convert by default object bounding box
+            var points = new Vector3[]
+            {
+                    bmin,
+                    new Vector3(bmin.X, bmin.Y, bmax.Z),
+                    new Vector3(bmin.X, bmax.Y, bmax.Z),
+                    new Vector3(bmin.X, bmax.Y, bmin.Z),
+                    new Vector3(bmax.X, bmin.Y, bmin.Z),
+                    new Vector3(bmax.X, bmax.Y, bmin.Z),
+                    new Vector3(bmax.X, bmin.Y, bmax.Z),
+                    bmax,
+            };
+            // convert to world coordinate
+            return points.Select(point => entity.GetOffsetInWorldCoords(point)).ToArray();
+        }
+
+        /// <summary>
+        /// Check if the entity is visible or not (consider occulusioni)
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="cam_position"></param>
+        /// <returns>Visible: true, Invisible: false</returns>
+        public static bool CheckOcculusionVisibility(Entity entity, Vector3 cam_position)
+        {
+            // get raycast positions
+            var check_poses = Get3DBoundingBoxCornersInWorldCoordinate(entity).ToList();
+            check_poses.Add(entity.Position);
+
+            // perform raycast
+            foreach (var check_pos in check_poses)
+            {
+                var raycast_result = World.Raycast(cam_position, check_pos, IntersectOptions.Everything);
+                if (raycast_result.DitHitAnything)
+                {
+                    if (raycast_result.HitEntity == entity) return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Compute a bounding box that is stored in memory (this is not just same with the entity appearance)
         /// </summary>
         /// <param name="entity"></param>
@@ -433,30 +483,24 @@ namespace gta5_vision_data_extractor
             }
             else
             {
-                Vector3 bmin, bmax;
-                model.GetDimensions(out bmin, out bmax);
-
-                // convert by default object bounding box
-                check_points = new Vector3[]
-                {
-                    bmin,
-                    new Vector3(bmin.X, bmin.Y, bmax.Z),
-                    new Vector3(bmin.X, bmax.Y, bmax.Z),
-                    new Vector3(bmin.X, bmax.Y, bmin.Z),
-                    new Vector3(bmax.X, bmin.Y, bmin.Z),
-                    new Vector3(bmax.X, bmax.Y, bmin.Z),
-                    new Vector3(bmax.X, bmin.Y, bmax.Z),
-                    bmax,
-                };
-                // convert to world coordinate
-                check_points = check_points.Select(point => entity.GetOffsetInWorldCoords(point)).ToArray();
+                check_points = Get3DBoundingBoxCornersInWorldCoordinate(entity);
             }
 
+            return CreateBoundingBox2DFromPointList(check_points);
+        }
+
+        /// <summary>
+        /// Create a 2D bounding box that contain all given points
+        /// </summary>
+        /// <param name="point_list"></param>
+        /// <returns></returns>
+        private static BoundingBox2D CreateBoundingBox2DFromPointList(Vector3 [] point_list)
+        {
             BoundingBox2D bb_ret = new BoundingBox2D();
             bb_ret.min = new Vector2(float.MaxValue, float.MaxValue);
             bb_ret.max = new Vector2(float.MinValue, float.MinValue);
-            
-            foreach (var point in check_points)
+
+            foreach (var point in point_list)
             {
                 // get bb in 2d
                 var screen_pos = GTAUtils.Convert3DPostoScreenPos(point);
