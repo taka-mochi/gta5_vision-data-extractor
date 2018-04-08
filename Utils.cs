@@ -41,6 +41,11 @@ namespace gta5_vision_data_extractor
         /// <param name="save_path"></param>
         public static void SaveBitmap(Image image, string save_path)
         {
+            var dirname = System.IO.Path.GetDirectoryName(save_path);
+            if (!System.IO.Directory.Exists(dirname))
+            {
+                System.IO.Directory.CreateDirectory(dirname);
+            }
             image.Save(save_path);
         }
     }

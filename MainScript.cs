@@ -38,13 +38,21 @@ namespace gta5_vision_data_extractor
         /// </summary>
         public ObjectDetector()
         {
-            // load setting from json file
-            _save_settings = ExportDetectionSettings.DeserializeFromJsonOrDefault("scripts/vision_data_extractor_settings.json");
+            try
+            {
+                // load setting from json file
+                _save_settings = ExportDetectionSettings.DeserializeFromJsonOrDefault("scripts/vision_data_extractor_settings.json");
 
-            _script_started_time = DateTime.Now;
+                _script_started_time = DateTime.Now;
 
-            // set event handlers
-            this.Tick += OnTick;
+                // set event handlers
+                this.Tick += OnTick;
+
+            }
+            catch (Exception e)
+            {
+                System.Windows.Forms.MessageBox.Show(e.ToString());
+            }
 
         }
 
@@ -60,7 +68,14 @@ namespace gta5_vision_data_extractor
             // check if this frame is target frame
             if (_frame_count % _save_settings.SaveFrameSpan == 0)
             {
-                DoDetectionExport();
+                try
+                {
+                    DoDetectionExport();
+                }
+                catch (Exception exp)
+                {
+                    System.Windows.Forms.MessageBox.Show(exp.ToString());
+                }
             }
         }
 
@@ -69,6 +84,8 @@ namespace gta5_vision_data_extractor
         /// </summary>
         private void DoDetectionExport()
         {
+            Wait(40);
+
             // find target objects around camera
             var camera_position = GameplayCamera.Position;
 
@@ -87,13 +104,14 @@ namespace gta5_vision_data_extractor
             {
                 found_entities.AddRange(World.GetNearbyVehicles(camera_position, _save_settings.DetectDistance).ToList());
             }
-
+            
             List<GTAUtils.BoundingBox2D> peds_bblist = new List<GTAUtils.BoundingBox2D>();
             List<GTAUtils.BoundingBox2D> vehicle_bblist = new List<GTAUtils.BoundingBox2D>();
 
             // detect 2D bounding box
             foreach (var entity in found_entities)
             {
+                if (entity == null || entity.Model == null) continue;
                 // check if is in screen
                 if (!entity.IsVisible) continue;
                 if (!entity.IsOnScreen) continue;
@@ -102,7 +120,7 @@ namespace gta5_vision_data_extractor
                 // check occlusion by ray-casting
                 // ...
 
-                var bb = GTAUtils.ComputeBoundingBox(entity);
+                var bb = GTAUtils.ComputeBoundingBox(entity, entity.Model.IsPed);
 
                 // cannot get bounding box
                 if (bb == null) continue;

@@ -80,7 +80,10 @@ namespace gta5_vision_data_extractor
             else
             {
                 // if file not exist, return default instance
-                return new ExportDetectionSettings();
+                var def_set = new ExportDetectionSettings();
+                def_set.SerializeToJson(json_path);
+
+                return def_set;
             }
         }
     }

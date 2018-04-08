@@ -14,7 +14,8 @@ namespace gta5_vision_data_extractor
     {
         public class BoundingBox2D
         {
-            public Vector2 min, max;
+            public Vector2 min;
+            public Vector2 max;
         }
 
         /// <summary>
@@ -422,11 +423,13 @@ namespace gta5_vision_data_extractor
                 foreach (var boneId in Enum.GetValues(typeof(PedBone)).Cast<int>())
                 {
                     var bone_idx = Function.Call<int>(Hash.GET_PED_BONE_INDEX, entity.Handle, boneId);
-                    if (bone_idx < 0) continue;
+                    if (bone_idx <= 0) continue;
 
-                    var pos = GetPedBonePositionInWorldCoord(entity, bone_idx);
+                    var pos = entity.GetBoneCoord(bone_idx);
+                    if (pos == Vector3.Zero) continue;
                     points.Add(pos);
                 }
+                check_points = points.ToArray();
             }
             else
             {
@@ -452,8 +455,7 @@ namespace gta5_vision_data_extractor
             BoundingBox2D bb_ret = new BoundingBox2D();
             bb_ret.min = new Vector2(float.MaxValue, float.MaxValue);
             bb_ret.max = new Vector2(float.MinValue, float.MinValue);
-
-            var center_pos = GTAUtils.Convert3DPostoScreenPos(entity.GetOffsetInWorldCoords(entity.Position));
+            
             foreach (var point in check_points)
             {
                 // get bb in 2d
@@ -472,26 +474,6 @@ namespace gta5_vision_data_extractor
 
             return bb_ret;
         }
-
-        /// <summary>
-        /// Get the world coordinate position of the entity
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <param name="bone_idx"></param>
-        /// <returns></returns>
-        private static Vector3 GetPedBonePositionInWorldCoord(Entity entity, int bone_idx)
-        {
-            OutputArgument outX = new OutputArgument();
-            OutputArgument outY = new OutputArgument();
-            OutputArgument outZ = new OutputArgument();
-            Function.Call(Hash.GET_PED_BONE_COORDS, entity.Handle, bone_idx, outX, outY, outZ);
-
-            // world coordinate is returned (not local position of entity)
-            float x = outX.GetResult<float>();
-            float y = outY.GetResult<float>();
-            float z = outZ.GetResult<float>();
-
-            return new Vector3(x, y, z);
-        }
+        
     }
 }
